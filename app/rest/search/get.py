@@ -1,5 +1,6 @@
 from typing import List, Optional
 from app.query.fetch_list import execute
+from app.const.reserved_uuids import RESERVED_UUIDS_ARRAY
 
 def get(record_types: Optional[List[str]] = None, search_string: Optional[str] = None, limit: Optional[int] = None) -> dict:
     result = {}
@@ -30,14 +31,15 @@ def query(record_type: str, search_string: Optional[str] = None, limit: Optional
             {id_column},
             Title
         FROM {table_name}
+        WHERE {id_column} NOT IN ({','.join(['%s'] * len(RESERVED_UUIDS_ARRAY))})
     """
 
-    values = []
+    values = list(RESERVED_UUIDS_ARRAY)
 
     if search_string:
         sql += """
-            WHERE LOWER(Title) LIKE %s
-               OR CAST({id_column} AS TEXT) LIKE %s
+            AND (LOWER(Title) LIKE %s
+               OR CAST({id_column} AS TEXT) LIKE %s)
         """.format(id_column=id_column)
 
         like_value = f"%{search_string.lower()}%"
